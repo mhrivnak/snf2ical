@@ -8,7 +8,6 @@ import (
 
 	"github.com/mhrivnak/snf2ical/pkg/parse"
 
-	"github.com/jordic/goics"
 	"github.com/spf13/cobra"
 )
 
@@ -45,10 +44,10 @@ func main() {
 			for _, cal := range calendars {
 				out, err := os.Create(cal.Filename)
 				if err != nil {
-					fmt.Printf("error creating file %s: %v", cal.Filename, err)
+					fmt.Printf("error writing calendar file %s: %v", cal.Filename, err)
 					os.Exit(1)
 				}
-				goics.NewICalEncode(out).Encode(cal)
+				cal.Write(out)
 				out.Close()
 			}
 		},

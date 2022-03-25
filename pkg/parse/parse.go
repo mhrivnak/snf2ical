@@ -2,6 +2,7 @@ package parse
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -34,6 +35,10 @@ type Calendar struct {
 	Rows     []Row
 	Filename string
 	Name     string
+}
+
+func (c Calendar) Write(w io.Writer) {
+	goics.NewICalEncode(w).Encode(c)
 }
 
 func Sorted(rows []Row) []Calendar {
