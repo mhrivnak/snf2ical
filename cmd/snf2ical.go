@@ -33,29 +33,22 @@ func main() {
 				os.Exit(1)
 			}
 
-			rows := make(parse.Rows, 1)
+			rows := make([]parse.Row, 0)
 
 			if err = json.Unmarshal(data, &rows); err != nil {
 				fmt.Printf("failed to unmarshal json file: %v", err)
 				os.Exit(1)
 			}
 
-			forums, workshops, other := rows.Sorted()
+			calendars := parse.Sorted(rows)
 
-			for _, cal := range []struct {
-				filename string
-				rows     parse.Rows
-			}{
-				{"forums.ics", forums},
-				{"workshops.ics", workshops},
-				{"other.ics", other},
-			} {
-				out, err := os.Create(cal.filename)
+			for _, cal := range calendars {
+				out, err := os.Create(cal.Filename)
 				if err != nil {
-					fmt.Printf("error creating file %s: %v", cal.filename, err)
+					fmt.Printf("error creating file %s: %v", cal.Filename, err)
 					os.Exit(1)
 				}
-				goics.NewICalEncode(out).Encode(cal.rows)
+				goics.NewICalEncode(out).Encode(cal)
 				out.Close()
 			}
 		},

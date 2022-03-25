@@ -30,55 +30,61 @@ type Row struct {
 	Value Event `json:"value"`
 }
 
-type Rows []Row
-
-func (r Rows) Sorted() (Rows, Rows, Rows) {
-	forumRows := make(Rows, 0)
-	workshopRows := make(Rows, 0)
-	otherRows := make(Rows, 0)
-
-	for _, row := range r {
-		switch row.Value.Type {
-		case "Forum":
-			forumRows = append(forumRows, row)
-		case "Workshop", "SNF Workshop":
-			workshopRows = append(workshopRows, row)
-		default:
-			otherRows = append(otherRows, row)
-		}
-	}
-
-	return forumRows, workshopRows, otherRows
+type Calendar struct {
+	Rows     []Row
+	Filename string
+	Name     string
 }
 
-func (r Rows) EmitICal() goics.Componenter {
-	c := goics.NewComponent()
-	c.SetType("VCALENDAR")
-	c.AddProperty("PRODID", "github.com/mhrivnak/snf2ical")
-	c.AddProperty("CALSCALE", "GREGORIAN")
-	c.AddProperty("VERSION", "2.0")
-	c.AddProperty("X-WR-TIMEZONE", "America/New_York")
-
-	// determine which calendar we're rendering by the type of the first entry
-	var name string
-	switch r[0].Value.Type {
-	case "Forum":
-		name = "SnF Forums"
-	case "Workshop", "SNF Workshop":
-		name = "SnF Workshops"
-	default:
-		name = "SnF Other"
+func Sorted(rows []Row) []Calendar {
+	forum := Calendar{
+		Name:     "SnF Forums",
+		Filename: "forums.ics",
+		Rows:     []Row{},
 	}
-	c.AddProperty("NAME", name)
-	c.AddProperty("X-WR-CALNAME", name)
+	workshop := Calendar{
+		Name:     "SnF Workshops",
+		Filename: "workshops.ics",
+		Rows:     []Row{},
+	}
+	other := Calendar{
+		Name:     "SnF Other",
+		Filename: "other.ics",
+		Rows:     []Row{},
+	}
 
-	for _, row := range r {
-		// at least one entry was entirely blank, and another lacked a start or end time.
-		if row.Value.Start != "" && row.Value.Name != "Forum - Not Currently Scheduled" {
-			c.AddComponent(row.Value.AsICS())
+	for _, row := range rows {
+		switch row.Value.Type {
+		case "Forum":
+			forum.Rows = append(forum.Rows, row)
+		case "Workshop", "SNF Workshop":
+			workshop.Rows = append(workshop.Rows, row)
+		default:
+			other.Rows = append(other.Rows, row)
 		}
 	}
-	return c
+
+	return []Calendar{forum, workshop, other}
+}
+
+func (c Calendar) EmitICal() goics.Componenter {
+	e := goics.NewComponent()
+	e.SetType("VCALENDAR")
+	e.AddProperty("PRODID", "github.com/mhrivnak/snf2ical")
+	e.AddProperty("CALSCALE", "GREGORIAN")
+	e.AddProperty("VERSION", "2.0")
+	e.AddProperty("X-WR-TIMEZONE", "America/New_York")
+
+	e.AddProperty("NAME", c.Name)
+	e.AddProperty("X-WR-CALNAME", c.Name)
+
+	for _, row := range c.Rows {
+		// at least one entry was entirely blank, and another lacked a start or end time.
+		if row.Value.Start != "" && row.Value.Name != "Forum - Not Currently Scheduled" {
+			e.AddComponent(row.Value.AsICS())
+		}
+	}
+	return e
 
 }
 
