@@ -32,6 +32,25 @@ type Row struct {
 
 type Rows []Row
 
+func (r Rows) Sorted() (Rows, Rows, Rows) {
+	forumRows := make(Rows, 0)
+	workshopRows := make(Rows, 0)
+	otherRows := make(Rows, 0)
+
+	for _, row := range r {
+		switch row.Value.Type {
+		case "Forum":
+			forumRows = append(forumRows, row)
+		case "Workshop", "SNF Workshop":
+			workshopRows = append(workshopRows, row)
+		default:
+			otherRows = append(otherRows, row)
+		}
+	}
+
+	return forumRows, workshopRows, otherRows
+}
+
 func (r Rows) EmitICal() goics.Componenter {
 	c := goics.NewComponent()
 	c.SetType("VCALENDAR")
@@ -39,6 +58,19 @@ func (r Rows) EmitICal() goics.Componenter {
 	c.AddProperty("CALSCALE", "GREGORIAN")
 	c.AddProperty("VERSION", "2.0")
 	c.AddProperty("X-WR-TIMEZONE", "America/New_York")
+
+	// determine which calendar we're rendering by the type of the first entry
+	var name string
+	switch r[0].Value.Type {
+	case "Forum":
+		name = "SnF Forums"
+	case "Workshop", "SNF Workshop":
+		name = "SnF Workshops"
+	default:
+		name = "SnF Other"
+	}
+	c.AddProperty("NAME", name)
+	c.AddProperty("X-WR-CALNAME", name)
 
 	for _, row := range r {
 		// at least one entry was entirely blank, and another lacked a start or end time.

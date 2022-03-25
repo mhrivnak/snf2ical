@@ -40,7 +40,24 @@ func main() {
 				os.Exit(1)
 			}
 
-			goics.NewICalEncode(os.Stdout).Encode(rows)
+			forums, workshops, other := rows.Sorted()
+
+			for _, cal := range []struct {
+				filename string
+				rows     parse.Rows
+			}{
+				{"forums.ics", forums},
+				{"workshops.ics", workshops},
+				{"other.ics", other},
+			} {
+				out, err := os.Create(cal.filename)
+				if err != nil {
+					fmt.Printf("error creating file %s: %v", cal.filename, err)
+					os.Exit(1)
+				}
+				goics.NewICalEncode(out).Encode(cal.rows)
+				out.Close()
+			}
 		},
 	}
 
