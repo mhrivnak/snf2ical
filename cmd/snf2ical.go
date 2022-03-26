@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/mhrivnak/snf2ical/pkg/parse"
+	"github.com/mhrivnak/snf2ical/pkg/status"
 
 	"github.com/spf13/cobra"
 )
@@ -43,6 +45,12 @@ func main() {
 				os.Exit(1)
 			}
 
+			s, err := status.New(time.Now(), len(rows))
+			if err != nil {
+				fmt.Printf("failed to create status template: %v", err)
+				os.Exit(1)
+			}
+
 			calendars := parse.Calendars(Year, rows)
 
 			for _, cal := range calendars {
@@ -55,6 +63,14 @@ func main() {
 				cal.Write(out)
 				out.Close()
 			}
+
+			statusOut, err := os.Create(filepath.Join(OutDir, "status.html"))
+			if err != nil {
+				fmt.Printf("error opening file %s: %v", filepath.Join(OutDir, "status.html"), err)
+				os.Exit(1)
+			}
+			defer statusOut.Close()
+			s.WriteTo(statusOut)
 		},
 	}
 
