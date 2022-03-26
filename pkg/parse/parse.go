@@ -11,6 +11,8 @@ import (
 	"github.com/jordic/goics"
 )
 
+var Year int
+
 var months map[string]string = map[string]string{
 	"March": "Mar",
 	"April": "Apr",
@@ -114,10 +116,12 @@ func (c Calendar) EmitICal() goics.Componenter {
 }
 
 func timestamp(month string, day int, t string) (time.Time, error) {
-	return time.Parse("Jan 2 2006 3:04:05 PM MST", fmt.Sprintf("%s %d 2022 %s EDT", month, day, t))
+	return time.Parse("Jan 2 2006 3:04:05 PM MST", fmt.Sprintf("%s %d %d %s EDT", month, day, Year, t))
 }
 
-func Sorted(rows []Row) []Calendar {
+func Calendars(year int, rows []Row) []Calendar {
+	Year = year
+
 	forum := Calendar{
 		Name:     "SnF Forums",
 		Filename: "forums.ics",
@@ -145,15 +149,18 @@ func Sorted(rows []Row) []Calendar {
 			forum.Rows = append(forum.Rows, row)
 		case "Workshop", "SNF Workshop":
 			workshop.Rows = append(workshop.Rows, row)
-		case "Auto Parking Lot - Opens",
-			"Main Registration/Ticket Office",
-			"SUN 'n FUN Merchandise",
-			"Family Fun Zone - Ticket Purchase Required",
-			"Kid Zone in the Family Fun Zone",
-			"Preferred Airshow Seating":
-			facilities.Rows = append(facilities.Rows, row)
 		default:
-			other.Rows = append(other.Rows, row)
+			matched := false
+			for _, keyword := range []string{"Parking", "Ticket Office", "Merchandise", "Family Fun", "Seating"} {
+				if strings.Contains(row.Value.Name, keyword) {
+					facilities.Rows = append(facilities.Rows, row)
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				other.Rows = append(other.Rows, row)
+			}
 		}
 	}
 

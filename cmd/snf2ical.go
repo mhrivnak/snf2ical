@@ -5,21 +5,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/mhrivnak/snf2ical/pkg/parse"
 
 	"github.com/spf13/cobra"
 )
 
+var OutDir string
+var Year int
+
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "snf2ical",
-		Short: "generate ical for Sun n Fun",
-		Long:  "snf2ical generates an ical file for Sun n Fun",
+		Short: "generate ical files for Sun n Fun",
+		Long:  "snf2ical creates or overwrites several ical files for Sun n Fun",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			filename := args[0]
-			f, err := os.Open(filename)
+			inputpath := args[0]
+			f, err := os.Open(inputpath)
 			if err != nil {
 				fmt.Println("failed to open file")
 				os.Exit(1)
@@ -39,12 +43,13 @@ func main() {
 				os.Exit(1)
 			}
 
-			calendars := parse.Sorted(rows)
+			calendars := parse.Calendars(Year, rows)
 
 			for _, cal := range calendars {
-				out, err := os.Create(cal.Filename)
+				outpath := filepath.Join(OutDir, cal.Filename)
+				out, err := os.Create(outpath)
 				if err != nil {
-					fmt.Printf("error writing calendar file %s: %v", cal.Filename, err)
+					fmt.Printf("error writing calendar file %s: %v", outpath, err)
 					os.Exit(1)
 				}
 				cal.Write(out)
@@ -52,6 +57,10 @@ func main() {
 			}
 		},
 	}
+
+	rootCmd.Flags().StringVarP(&OutDir, "outdir", "o", "", "directory in which to create or overwrite files. Defaults to CWD.")
+	rootCmd.Flags().IntVarP(&Year, "year", "y", 0, "Year of the event. Example: 2022")
+	rootCmd.MarkFlagRequired("year")
 
 	rootCmd.Execute()
 }
