@@ -144,6 +144,11 @@ func Calendars(year int, rows []Row) []Calendar {
 		Filename: "facilities.ics",
 		Rows:     []Row{},
 	}
+	presentations := Calendar{
+		Name:     "SnF Presentations & Interviews",
+		Filename: "presentations.ics",
+		Rows:     []Row{},
+	}
 
 	for _, row := range rows {
 		switch row.Value.Type {
@@ -151,6 +156,8 @@ func Calendars(year int, rows []Row) []Calendar {
 			forum.Rows = append(forum.Rows, row)
 		case "Workshop", "SNF Workshop":
 			workshop.Rows = append(workshop.Rows, row)
+		case "Presentation", "Interview":
+			presentations.Rows = append(presentations.Rows, row)
 		default:
 			matched := false
 			for _, keyword := range []string{"Parking", "Ticket Office", "Merchandise", "Family Fun", "Seating"} {
@@ -166,5 +173,5 @@ func Calendars(year int, rows []Row) []Calendar {
 		}
 	}
 
-	return []Calendar{forum, workshop, other, facilities}
+	return []Calendar{forum, workshop, other, facilities, presentations}
 }
