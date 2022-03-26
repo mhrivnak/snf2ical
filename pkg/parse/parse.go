@@ -85,16 +85,17 @@ type Row struct {
 }
 
 type Calendar struct {
-	Rows     []Row
-	Filename string
-	Name     string
+	Rows      []Row
+	Filename  string
+	Name      string
+	EmitCount int
 }
 
-func (c Calendar) Write(w io.Writer) {
+func (c *Calendar) WriteTo(w io.Writer) {
 	goics.NewICalEncode(w).Encode(c)
 }
 
-func (c Calendar) EmitICal() goics.Componenter {
+func (c *Calendar) EmitICal() goics.Componenter {
 	e := goics.NewComponent()
 	e.SetType("VCALENDAR")
 	e.AddProperty("PRODID", "github.com/mhrivnak/snf2ical")
@@ -109,6 +110,7 @@ func (c Calendar) EmitICal() goics.Componenter {
 		// at least one entry was entirely blank, and another lacked a start or end time.
 		if row.Value.Start != "" && row.Value.Name != "Forum - Not Currently Scheduled" {
 			e.AddComponent(row.Value.AsICS())
+			c.EmitCount += 1
 		}
 	}
 	return e

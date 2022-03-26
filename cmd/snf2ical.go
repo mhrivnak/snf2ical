@@ -45,13 +45,8 @@ func main() {
 				os.Exit(1)
 			}
 
-			s, err := status.New(time.Now(), len(rows))
-			if err != nil {
-				fmt.Printf("failed to create status template: %v", err)
-				os.Exit(1)
-			}
-
 			calendars := parse.Calendars(Year, rows)
+			eventCount := 0
 
 			for _, cal := range calendars {
 				outpath := filepath.Join(OutDir, cal.Filename)
@@ -60,8 +55,15 @@ func main() {
 					fmt.Printf("error writing calendar file %s: %v", outpath, err)
 					os.Exit(1)
 				}
-				cal.Write(out)
+				cal.WriteTo(out)
 				out.Close()
+				eventCount += cal.EmitCount
+			}
+
+			s, err := status.New(time.Now(), eventCount)
+			if err != nil {
+				fmt.Printf("failed to create status template: %v", err)
+				os.Exit(1)
 			}
 
 			statusOut, err := os.Create(filepath.Join(OutDir, "status.html"))
