@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnF Schedule</title>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/details.html">Details</a>
+    </nav>
+
+    <h1>SnF Schedule</h1>
+    <p>Usable calendars for the Sun 'n Fun Aerospace Expo</p>
+  </header>
+
+  <main>
+    <h4>Details</h4>
+    <p>The SnF daily schedule web page loads all of the event data as a big JSON file, and then it gets rendered as the unusable table that people are familiar with. Why is it so unusable? Let's recap:</p>
+    <ul>
+      <li>The Day column sorts alphabetically. Friday, Monday, Sunday, ...</li>
+      <li>You can't sort by Day first then by Time. You can only sort by a single column.</li>
+      <li>There are pages and pages of events per day! It's a lot to digest through a table, even if the sorting worked.</li>
+    </ul>
+
+    <p>I don't mean to criticize or cast blame. There is just an opportunity for a better solution, and hopefully this effort is a step in the right direction.</p>
+
+    <h4>Code</h4>
+    <p>I wrote a bit of code to transform the data from JSON to iCalendar. You can see it <a href="https://github.com/mhrivnak/snf2ical">on GitHub</a> if you like. It is open source, of course, so contributions of any kind are welcome. That includes bug reports, corrections, suggestions, encouragement, beverages, or even code.</p>
+
+    <h4>What Next?</h4>
+    <p>If you are part of SnF, especially the website, especially especially the online schedule, and you'd like to chat about how to improve things, please get in touch. I'm happy to help if or how I can. I would be very happy to shut this site down if the primary schedule could meet people's needs. And of course if SnF in any way objects to what I've done, I'll turn it all off if you just let me know.</p>
+    <p>Just to set expectations, I am definitely not a web developer. I primarily write back-end software. The website you're reading right now is one of my most notable web-development achievements. So I probably can't fix the SnF website. If nothing else, maybe we can coordinate how this site's re-constitution of the data fits in with your workflow.</p>
+
+    <h4>Me</h4>
+    <p>I'm a first-time attendee in 2022. I do not intend to gain anything through this website and effort except a usable calendar for my own benefit, and hopefully the opportunity to share that with others who may also find it useful.</p>
+    <p>If you want to get in touch (especially if you have recommendations for a first-time attendee!), my DMs are open <a href="https://twitter.com/michael_hrivnak">on Twitter</a>.</p>
+  </main>
+
+  <footer>
+    <p>Copyright © 2022 Michael Hrivnak</p>
+  </footer>
+</body>
+</html>
