@@ -1,10 +1,11 @@
 module github.com/mhrivnak/snf2ical
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/jordic/goics v0.0.0-20210404174824-5a0337b716a0
 	github.com/spf13/cobra v1.10.2
+	golang.org/x/net v0.52.0
 )
 
 require (
