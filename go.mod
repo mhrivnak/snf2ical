@@ -1,6 +1,6 @@
 module github.com/mhrivnak/snf2ical
 
-go 1.17
+go 1.25
 
 require (
 	github.com/jordic/goics v0.0.0-20210404174824-5a0337b716a0
