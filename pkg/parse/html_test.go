@@ -138,6 +138,98 @@ func TestParseScheduleHTML_NoTable(t *testing.T) {
 	}
 }
 
+func TestParseScheduleHTML_ExactClassMatch(t *testing.T) {
+	// Table with class "tablepressfoo" should NOT match "tablepress"
+	htmlContent := `
+<!DOCTYPE html>
+<html>
+<body>
+<table class="tablepressfoo">
+<tbody>
+<tr>
+	<td>Should not match</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
+`
+
+	_, err := ParseScheduleHTML(strings.NewReader(htmlContent))
+	if err == nil {
+		t.Error("Expected error when table class is substring match only, got nil")
+	}
+
+	// Table with class "foo tablepress bar" SHOULD match "tablepress"
+	htmlContent2 := `
+<!DOCTYPE html>
+<html>
+<body>
+<table class="foo tablepress bar">
+<thead>
+<tr><th>Day</th><th>Event Name</th><th>Start Time</th><th>End Time</th><th>Speaker Name/Title</th><th>Event Type</th><th>Tracks</th><th>Location</th></tr>
+</thead>
+<tbody>
+<tr>
+	<td>Mon. April 1</td><td>Test</td><td>10:00 AM</td><td>11:00 AM</td><td></td><td>Workshop</td><td></td><td>Building A</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
+`
+
+	rows, err := ParseScheduleHTML(strings.NewReader(htmlContent2))
+	if err != nil {
+		t.Errorf("Expected success with exact class token match, got error: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Errorf("Expected 1 row, got %d", len(rows))
+	}
+}
+
+func TestParseScheduleHTML_StopsAfterFirstTable(t *testing.T) {
+	// Multiple tables with tablepress class - should only parse the first one
+	htmlContent := `
+<!DOCTYPE html>
+<html>
+<body>
+<table class="tablepress">
+<thead>
+<tr><th>Day</th><th>Event Name</th><th>Start Time</th><th>End Time</th><th>Speaker Name/Title</th><th>Event Type</th><th>Tracks</th><th>Location</th></tr>
+</thead>
+<tbody>
+<tr>
+	<td>Mon. April 1</td><td>First Table Event</td><td>10:00 AM</td><td>11:00 AM</td><td></td><td>Workshop</td><td></td><td>Building A</td>
+</tr>
+</tbody>
+</table>
+<table class="tablepress">
+<thead>
+<tr><th>Day</th><th>Event Name</th><th>Start Time</th><th>End Time</th><th>Speaker Name/Title</th><th>Event Type</th><th>Tracks</th><th>Location</th></tr>
+</thead>
+<tbody>
+<tr>
+	<td>Tue. April 2</td><td>Second Table Event</td><td>2:00 PM</td><td>3:00 PM</td><td></td><td>Workshop</td><td></td><td>Building B</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
+`
+
+	rows, err := ParseScheduleHTML(strings.NewReader(htmlContent))
+	if err != nil {
+		t.Errorf("Expected success, got error: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Errorf("Expected 1 row from first table only, got %d", len(rows))
+	}
+	if len(rows) > 0 && rows[0].Value.Name != "First Table Event" {
+		t.Errorf("Expected first table event, got %s", rows[0].Value.Name)
+	}
+}
+
 func TestIsEmptyEvent(t *testing.T) {
 	tests := []struct {
 		name     string

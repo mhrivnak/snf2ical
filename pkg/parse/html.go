@@ -35,6 +35,10 @@ func ParseScheduleHTML(r io.Reader) ([]Row, error) {
 	tableFound := false
 	var f func(*html.Node)
 	f = func(n *html.Node) {
+		// Short-circuit if table already found
+		if tableFound {
+			return
+		}
 		if n.Type == html.ElementNode && n.Data == "table" {
 			// Check if this is the schedule table
 			if hasClass(n, "tablepress") {
@@ -56,11 +60,17 @@ func ParseScheduleHTML(r io.Reader) ([]Row, error) {
 	return rows, nil
 }
 
-// hasClass checks if a node has a specific class
+// hasClass checks if a node has a specific class (exact token match)
 func hasClass(n *html.Node, class string) bool {
 	for _, attr := range n.Attr {
-		if attr.Key == "class" && strings.Contains(attr.Val, class) {
-			return true
+		if attr.Key == "class" {
+			// Split class attribute on whitespace and check for exact match
+			classes := strings.Fields(attr.Val)
+			for _, c := range classes {
+				if c == class {
+					return true
+				}
+			}
 		}
 	}
 	return false
