@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+
 	"os"
 	"path/filepath"
 	"time"
@@ -47,7 +48,7 @@ func main() {
 				}
 				defer f.Close()
 
-				data, err := ioutil.ReadAll(f)
+				data, err := io.ReadAll(f)
 				if err != nil {
 					fmt.Printf("failed to read JSON file: %v\n", err)
 					os.Exit(1)
