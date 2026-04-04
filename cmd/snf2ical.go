@@ -18,7 +18,6 @@ var OutDir string
 var Year int
 var ScheduleURL string
 var JSONFile string
-var HTMLFile string
 
 func main() {
 	rootCmd := &cobra.Command{
@@ -37,20 +36,6 @@ func main() {
 				rows, err = parse.FetchScheduleHTML(ScheduleURL)
 				if err != nil {
 					fmt.Printf("failed to fetch schedule from URL: %v\n", err)
-					os.Exit(1)
-				}
-			} else if HTMLFile != "" {
-				// Parse HTML from file
-				f, err := os.Open(HTMLFile)
-				if err != nil {
-					fmt.Printf("failed to open HTML file: %v\n", err)
-					os.Exit(1)
-				}
-				defer f.Close()
-
-				rows, err = parse.ParseScheduleHTML(f)
-				if err != nil {
-					fmt.Printf("failed to parse HTML: %v\n", err)
 					os.Exit(1)
 				}
 			} else if JSONFile != "" {
@@ -74,7 +59,7 @@ func main() {
 					os.Exit(1)
 				}
 			} else {
-				fmt.Println("error: must provide one of --url, --html, or --json")
+				fmt.Println("error: must provide one of --url or --json")
 				os.Exit(1)
 			}
 
@@ -114,7 +99,6 @@ func main() {
 	rootCmd.Flags().StringVarP(&OutDir, "outdir", "o", "", "directory in which to create or overwrite files. Defaults to CWD.")
 	rootCmd.Flags().IntVarP(&Year, "year", "y", 0, "Year of the event. Example: 2022")
 	rootCmd.Flags().StringVarP(&ScheduleURL, "url", "u", "", "URL to fetch schedule HTML from")
-	rootCmd.Flags().StringVarP(&HTMLFile, "html", "", "", "HTML file to parse schedule from")
 	rootCmd.Flags().StringVarP(&JSONFile, "json", "j", "", "JSON file to parse schedule from")
 	rootCmd.MarkFlagRequired("year")
 
