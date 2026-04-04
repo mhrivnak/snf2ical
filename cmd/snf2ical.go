@@ -104,10 +104,9 @@ func main() {
 	}
 
 	rootCmd.Flags().StringVarP(&OutDir, "outdir", "o", "", "directory in which to create or overwrite files. Defaults to CWD.")
-	rootCmd.Flags().IntVarP(&Year, "year", "y", 0, "Year of the event. Example: 2022")
+	rootCmd.Flags().IntVarP(&Year, "year", "y", time.Now().Year(), "Year of the event. Example: 2022")
 	rootCmd.Flags().StringVarP(&ScheduleURL, "url", "u", "", "URL to fetch schedule HTML from")
 	rootCmd.Flags().StringVarP(&JSONFile, "json", "j", "", "JSON file to parse schedule from")
-	rootCmd.MarkFlagRequired("year")
 
 	rootCmd.Execute()
 }
