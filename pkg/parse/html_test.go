@@ -44,7 +44,7 @@ func TestParseScheduleHTML(t *testing.T) {
 
 	// Should have 3 rows (empty row should be skipped)
 	if len(rows) != 3 {
-		t.Errorf("Expected 3 rows, got %d", len(rows))
+		t.Fatalf("Expected 3 rows, got %d", len(rows))
 	}
 
 	// Test first row
