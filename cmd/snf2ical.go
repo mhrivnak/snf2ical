@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/mhrivnak/snf2ical/pkg/parse"
@@ -18,60 +17,65 @@ import (
 var OutDir string
 var Year int
 var ScheduleURL string
+var JSONFile string
+var HTMLFile string
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "snf2ical [input-file]",
+		Use:   "snf2ical",
 		Short: "generate ical files for Sun n Fun",
 		Long:  "snf2ical creates or overwrites several ical files for Sun n Fun",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			var rows []parse.Row
 			var err error
 
-			// If URL is provided, fetch from URL; otherwise read from file
+			// Determine which input source to use based on flags
 			if ScheduleURL != "" {
+				// Fetch HTML from URL
 				fmt.Printf("Fetching schedule from %s...\n", ScheduleURL)
 				rows, err = parse.FetchScheduleHTML(ScheduleURL)
 				if err != nil {
 					fmt.Printf("failed to fetch schedule from URL: %v\n", err)
 					os.Exit(1)
 				}
-			} else {
-				if len(args) == 0 {
-					fmt.Println("error: either provide an input file or use --url flag")
-					os.Exit(1)
-				}
-
-				inputpath := args[0]
-				f, err := os.Open(inputpath)
+			} else if HTMLFile != "" {
+				// Parse HTML from file
+				f, err := os.Open(HTMLFile)
 				if err != nil {
-					fmt.Println("failed to open file")
+					fmt.Printf("failed to open HTML file: %v\n", err)
 					os.Exit(1)
 				}
 				defer f.Close()
 
-				// Parse based on file extension
-				if strings.HasSuffix(inputpath, ".html") || strings.HasSuffix(inputpath, ".htm") {
-					rows, err = parse.ParseScheduleHTML(f)
-					if err != nil {
-						fmt.Printf("failed to parse HTML: %v\n", err)
-						os.Exit(1)
-					}
-				} else {
-					// Assume JSON format
-					data, err := ioutil.ReadAll(f)
-					if err != nil {
-						fmt.Println("failed to read file")
-						os.Exit(1)
-					}
-
-					rows = make([]parse.Row, 0)
-					if err = json.Unmarshal(data, &rows); err != nil {
-						fmt.Printf("failed to unmarshal json file: %v", err)
-						os.Exit(1)
-					}
+				rows, err = parse.ParseScheduleHTML(f)
+				if err != nil {
+					fmt.Printf("failed to parse HTML: %v\n", err)
+					os.Exit(1)
 				}
+			} else if JSONFile != "" {
+				// Parse JSON from file
+				f, err := os.Open(JSONFile)
+				if err != nil {
+					fmt.Printf("failed to open JSON file: %v\n", err)
+					os.Exit(1)
+				}
+				defer f.Close()
+
+				data, err := ioutil.ReadAll(f)
+				if err != nil {
+					fmt.Printf("failed to read JSON file: %v\n", err)
+					os.Exit(1)
+				}
+
+				rows = make([]parse.Row, 0)
+				if err = json.Unmarshal(data, &rows); err != nil {
+					fmt.Printf("failed to unmarshal JSON file: %v\n", err)
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("error: must provide one of --url, --html, or --json")
+				os.Exit(1)
 			}
 
 			fmt.Printf("Parsed %d events\n", len(rows))
@@ -110,6 +114,8 @@ func main() {
 	rootCmd.Flags().StringVarP(&OutDir, "outdir", "o", "", "directory in which to create or overwrite files. Defaults to CWD.")
 	rootCmd.Flags().IntVarP(&Year, "year", "y", 0, "Year of the event. Example: 2022")
 	rootCmd.Flags().StringVarP(&ScheduleURL, "url", "u", "", "URL to fetch schedule HTML from")
+	rootCmd.Flags().StringVarP(&HTMLFile, "html", "", "", "HTML file to parse schedule from")
+	rootCmd.Flags().StringVarP(&JSONFile, "json", "j", "", "JSON file to parse schedule from")
 	rootCmd.MarkFlagRequired("year")
 
 	rootCmd.Execute()
