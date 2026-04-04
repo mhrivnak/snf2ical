@@ -300,3 +300,100 @@ func TestGetTextContent(t *testing.T) {
 func parseHTMLFragment(content string) (*html.Node, error) {
 	return html.Parse(strings.NewReader(content))
 }
+
+func TestParseScheduleHTML_ReorderedColumns(t *testing.T) {
+	// Test with columns in different order than expected
+	htmlContent := `
+<!DOCTYPE html>
+<html>
+<body>
+<table class="tablepress">
+<thead>
+<tr><th>Location</th><th>Event Type</th><th>Day</th><th>Event Name</th><th>End Time</th><th>Start Time</th><th>Speaker Name/Title</th><th>Tracks & Credits</th></tr>
+</thead>
+<tbody>
+<tr>
+	<td>Building A</td><td>Workshop</td><td>Wed. April 8</td><td>Test Event</td><td>12:00 PM</td><td>10:00 AM</td><td>John Doe</td><td>Track 1</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
+`
+
+	rows, err := ParseScheduleHTML(strings.NewReader(htmlContent))
+	if err != nil {
+		t.Fatalf("ParseScheduleHTML failed: %v", err)
+	}
+
+	if len(rows) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(rows))
+	}
+
+	row := rows[0].Value
+	if row.Day != "Wed. April 8" {
+		t.Errorf("Expected Day 'Wed. April 8', got '%s'", row.Day)
+	}
+	if row.Name != "Test Event" {
+		t.Errorf("Expected Name 'Test Event', got '%s'", row.Name)
+	}
+	if row.Start != "10:00 AM" {
+		t.Errorf("Expected Start '10:00 AM', got '%s'", row.Start)
+	}
+	if row.End != "12:00 PM" {
+		t.Errorf("Expected End '12:00 PM', got '%s'", row.End)
+	}
+	if row.Speaker != "John Doe" {
+		t.Errorf("Expected Speaker 'John Doe', got '%s'", row.Speaker)
+	}
+	if row.Type != "Workshop" {
+		t.Errorf("Expected Type 'Workshop', got '%s'", row.Type)
+	}
+	if row.Track != "Track 1" {
+		t.Errorf("Expected Track 'Track 1', got '%s'", row.Track)
+	}
+	if row.Location != "Building A" {
+		t.Errorf("Expected Location 'Building A', got '%s'", row.Location)
+	}
+}
+
+func TestParseScheduleHTML_ExtraColumns(t *testing.T) {
+	// Test with extra columns that aren't mapped
+	htmlContent := `
+<!DOCTYPE html>
+<html>
+<body>
+<table class="tablepress">
+<thead>
+<tr><th>Day</th><th>Extra Column 1</th><th>Event Name</th><th>Start Time</th><th>Extra Column 2</th><th>End Time</th><th>Speaker Name/Title</th><th>Event Type</th><th>Tracks & Credits</th><th>Location</th><th>Extra Column 3</th></tr>
+</thead>
+<tbody>
+<tr>
+	<td>Mon. April 1</td><td>Ignored</td><td>Test Event</td><td>9:00 AM</td><td>Ignored</td><td>10:00 AM</td><td>Jane Smith</td><td>Forum</td><td>Aviation</td><td>Hall B</td><td>Ignored</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
+`
+
+	rows, err := ParseScheduleHTML(strings.NewReader(htmlContent))
+	if err != nil {
+		t.Fatalf("ParseScheduleHTML failed: %v", err)
+	}
+
+	if len(rows) != 1 {
+		t.Fatalf("Expected 1 row, got %d", len(rows))
+	}
+
+	row := rows[0].Value
+	if row.Day != "Mon. April 1" {
+		t.Errorf("Expected Day 'Mon. April 1', got '%s'", row.Day)
+	}
+	if row.Name != "Test Event" {
+		t.Errorf("Expected Name 'Test Event', got '%s'", row.Name)
+	}
+	if row.Location != "Hall B" {
+		t.Errorf("Expected Location 'Hall B', got '%s'", row.Location)
+	}
+}

@@ -79,13 +79,17 @@ func hasClass(n *html.Node, class string) bool {
 // parseTable extracts rows from a table node
 func parseTable(table *html.Node) []Row {
 	rows := []Row{}
+	var thead *html.Node
 	var tbody *html.Node
 
-	// Find tbody element
+	// Find thead and tbody elements
 	for c := table.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.ElementNode && c.Data == "tbody" {
-			tbody = c
-			break
+		if c.Type == html.ElementNode {
+			if c.Data == "thead" {
+				thead = c
+			} else if c.Data == "tbody" {
+				tbody = c
+			}
 		}
 	}
 
@@ -93,10 +97,13 @@ func parseTable(table *html.Node) []Row {
 		return rows
 	}
 
+	// Extract column mapping from headers
+	columnMap := extractColumnMap(thead)
+
 	// Parse each row in tbody
 	for tr := tbody.FirstChild; tr != nil; tr = tr.NextSibling {
 		if tr.Type == html.ElementNode && tr.Data == "tr" {
-			row := parseRow(tr)
+			row := parseRow(tr, columnMap)
 			// Skip empty rows (rows where all fields are empty)
 			if !isEmptyEvent(row.Value) {
 				rows = append(rows, row)
@@ -107,8 +114,42 @@ func parseTable(table *html.Node) []Row {
 	return rows
 }
 
-// parseRow extracts data from a table row
-func parseRow(tr *html.Node) Row {
+// extractColumnMap creates a mapping from expected column names to column indices
+func extractColumnMap(thead *html.Node) map[string]int {
+	columnMap := make(map[string]int)
+
+	if thead == nil {
+		return columnMap
+	}
+
+	// Find the header row
+	var headerRow *html.Node
+	for tr := thead.FirstChild; tr != nil; tr = tr.NextSibling {
+		if tr.Type == html.ElementNode && tr.Data == "tr" {
+			headerRow = tr
+			break
+		}
+	}
+
+	if headerRow == nil {
+		return columnMap
+	}
+
+	// Extract header text and build mapping
+	colIndex := 0
+	for th := headerRow.FirstChild; th != nil; th = th.NextSibling {
+		if th.Type == html.ElementNode && th.Data == "th" {
+			headerText := strings.TrimSpace(getTextContent(th))
+			columnMap[headerText] = colIndex
+			colIndex++
+		}
+	}
+
+	return columnMap
+}
+
+// parseRow extracts data from a table row using column mapping
+func parseRow(tr *html.Node, columnMap map[string]int) Row {
 	cells := []string{}
 
 	for td := tr.FirstChild; td != nil; td = td.NextSibling {
@@ -117,33 +158,25 @@ func parseRow(tr *html.Node) Row {
 		}
 	}
 
-	// Map cells to Event struct fields in order:
-	// Day, Event Name, Start Time, End Time, Speaker Name/Title, Event Type, Tracks & Credits, Location
+	// Map cells to Event struct fields using header names
 	event := Event{}
-	if len(cells) > 0 {
-		event.Day = strings.TrimSpace(cells[0])
+
+	// Helper function to get cell value by header name
+	getCellByHeader := func(headerName string) string {
+		if idx, ok := columnMap[headerName]; ok && idx < len(cells) {
+			return strings.TrimSpace(cells[idx])
+		}
+		return ""
 	}
-	if len(cells) > 1 {
-		event.Name = strings.TrimSpace(cells[1])
-	}
-	if len(cells) > 2 {
-		event.Start = strings.TrimSpace(cells[2])
-	}
-	if len(cells) > 3 {
-		event.End = strings.TrimSpace(cells[3])
-	}
-	if len(cells) > 4 {
-		event.Speaker = strings.TrimSpace(cells[4])
-	}
-	if len(cells) > 5 {
-		event.Type = strings.TrimSpace(cells[5])
-	}
-	if len(cells) > 6 {
-		event.Track = strings.TrimSpace(cells[6])
-	}
-	if len(cells) > 7 {
-		event.Location = strings.TrimSpace(cells[7])
-	}
+
+	event.Day = getCellByHeader("Day")
+	event.Name = getCellByHeader("Event Name")
+	event.Start = getCellByHeader("Start Time")
+	event.End = getCellByHeader("End Time")
+	event.Speaker = getCellByHeader("Speaker Name/Title")
+	event.Type = getCellByHeader("Event Type")
+	event.Track = getCellByHeader("Tracks & Credits")
+	event.Location = getCellByHeader("Location")
 
 	return Row{Value: event}
 }
