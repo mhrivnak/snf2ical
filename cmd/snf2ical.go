@@ -51,21 +51,21 @@ func main() {
 				}
 				defer f.Close()
 
-				data, err := ioutil.ReadAll(f)
-				if err != nil {
-					fmt.Println("failed to parse data")
-					os.Exit(1)
-				}
-
-				// Try to parse as HTML first, fall back to JSON
-				if strings.Contains(inputpath, ".html") || strings.Contains(string(data), "<table") {
-					f.Seek(0, 0) // Reset file pointer
+				// Parse based on file extension
+				if strings.HasSuffix(inputpath, ".html") || strings.HasSuffix(inputpath, ".htm") {
 					rows, err = parse.ParseScheduleHTML(f)
 					if err != nil {
 						fmt.Printf("failed to parse HTML: %v\n", err)
 						os.Exit(1)
 					}
 				} else {
+					// Assume JSON format
+					data, err := ioutil.ReadAll(f)
+					if err != nil {
+						fmt.Println("failed to read file")
+						os.Exit(1)
+					}
+
 					rows = make([]parse.Row, 0)
 					if err = json.Unmarshal(data, &rows); err != nil {
 						fmt.Printf("failed to unmarshal json file: %v", err)
