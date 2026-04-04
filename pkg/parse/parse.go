@@ -118,6 +118,15 @@ func (c *Calendar) EmitICal() goics.Componenter {
 }
 
 func timestamp(month string, day int, t string) (time.Time, error) {
+	// Handle both "HH:MM AM" and "HH:MM:SS AM" formats
+	// If the time doesn't have seconds, add ":00"
+	if strings.Count(t, ":") == 1 {
+		// Has only hours and minutes, add seconds
+		parts := strings.Split(t, " ")
+		if len(parts) == 2 {
+			t = parts[0] + ":00 " + parts[1]
+		}
+	}
 	return time.Parse("Jan 2 2006 3:04:05 PM MST", fmt.Sprintf("%s %d %d %s EDT", month, day, Year, t))
 }
 
