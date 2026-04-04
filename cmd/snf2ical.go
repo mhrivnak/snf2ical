@@ -30,6 +30,12 @@ func main() {
 			var rows []parse.Row
 			var err error
 
+			// Validate mutually exclusive flags
+			if ScheduleURL != "" && JSONFile != "" {
+				fmt.Println("error: cannot specify both --url and --json")
+				os.Exit(1)
+			}
+
 			// Determine which input source to use based on flags
 			if ScheduleURL != "" {
 				// Fetch HTML from URL
