@@ -17,5 +17,7 @@
 *.json
 *.ical
 *.ics
+status.html
+.task
 
 snf2ical
