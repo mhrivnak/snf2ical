@@ -22,9 +22,6 @@ jobs:
       - name: Build binaries
         run: |
           GOOS=linux  GOARCH=amd64 go build -o snf2ical-linux-amd64   ./cmd/snf2ical.go
-          GOOS=linux  GOARCH=arm64 go build -o snf2ical-linux-arm64   ./cmd/snf2ical.go
-          GOOS=darwin GOARCH=amd64 go build -o snf2ical-darwin-amd64  ./cmd/snf2ical.go
-          GOOS=darwin GOARCH=arm64 go build -o snf2ical-darwin-arm64  ./cmd/snf2ical.go
 
       - name: Upload binaries to release
         env:
@@ -32,6 +29,3 @@ jobs:
         run: |
           gh release upload "${{ github.ref_name }}" \
             snf2ical-linux-amd64 \
-            snf2ical-linux-arm64 \
-            snf2ical-darwin-amd64 \
-            snf2ical-darwin-arm64
