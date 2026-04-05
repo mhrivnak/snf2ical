@@ -357,6 +357,23 @@ func TestParseScheduleHTML_ReorderedColumns(t *testing.T) {
 	}
 }
 
+func TestEarliestDate_UsesForumsOnly(t *testing.T) {
+	// "Other" has an earlier date; EarliestDate should ignore it and use forums.
+	rows := []Row{
+		{Value: Event{Day: "Mon. April 1", Name: "Pre-Expo Event", Start: "8:00 AM", End: "9:00 AM", Type: "Other"}},
+		{Value: Event{Day: "Wed. April 3", Name: "Forum Event", Start: "9:00 AM", End: "10:00 AM", Type: "Forum"}},
+	}
+	calendars := Calendars(2026, rows)
+
+	date, err := EarliestDate(calendars)
+	if err != nil {
+		t.Fatalf("EarliestDate returned error: %v", err)
+	}
+	if date != "2026-04-03" {
+		t.Errorf("Expected 2026-04-03, got %s", date)
+	}
+}
+
 func TestCalendars_ForumPrefix(t *testing.T) {
 	rows := []Row{
 		{Value: Event{Day: "Mon. April 1", Name: "Old Forum Event", Start: "9:00 AM", End: "10:00 AM", Type: "Forum"}},
