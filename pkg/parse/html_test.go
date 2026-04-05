@@ -357,6 +357,30 @@ func TestParseScheduleHTML_ReorderedColumns(t *testing.T) {
 	}
 }
 
+func TestCalendars_ForumPrefix(t *testing.T) {
+	rows := []Row{
+		{Value: Event{Day: "Mon. April 1", Name: "Old Forum Event", Start: "9:00 AM", End: "10:00 AM", Type: "Forum"}},
+		{Value: Event{Day: "Mon. April 1", Name: "New Forum Event", Start: "11:00 AM", End: "12:00 PM", Type: "Forum - STOL Base Camp"}},
+		{Value: Event{Day: "Mon. April 1", Name: "Workshop Event", Start: "1:00 PM", End: "2:00 PM", Type: "Workshop"}},
+	}
+
+	calendars := Calendars(2026, rows)
+
+	var forumCal *Calendar
+	for i := range calendars {
+		if calendars[i].Filename == "forums.ics" {
+			forumCal = &calendars[i]
+			break
+		}
+	}
+	if forumCal == nil {
+		t.Fatal("forums.ics calendar not found")
+	}
+	if len(forumCal.Rows) != 2 {
+		t.Errorf("Expected 2 forum rows, got %d", len(forumCal.Rows))
+	}
+}
+
 func TestParseScheduleHTML_ExtraColumns(t *testing.T) {
 	// Test with extra columns that aren't mapped
 	htmlContent := `

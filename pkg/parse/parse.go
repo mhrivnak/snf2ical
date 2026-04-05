@@ -160,12 +160,12 @@ func Calendars(year int, rows []Row) []Calendar {
 	}
 
 	for _, row := range rows {
-		switch row.Value.Type {
-		case "Forum":
+		switch {
+		case strings.HasPrefix(row.Value.Type, "Forum"):
 			forum.Rows = append(forum.Rows, row)
-		case "Workshop", "SNF Workshop":
+		case row.Value.Type == "Workshop" || row.Value.Type == "SNF Workshop":
 			workshop.Rows = append(workshop.Rows, row)
-		case "Presentation", "Interview":
+		case row.Value.Type == "Presentation" || row.Value.Type == "Interview":
 			presentations.Rows = append(presentations.Rows, row)
 		default:
 			matched := false
