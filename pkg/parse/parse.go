@@ -130,12 +130,17 @@ func timestamp(month string, day int, t string) (time.Time, error) {
 	return time.Parse("Jan 2 2006 3:04:05 PM MST", fmt.Sprintf("%s %d %d %s EDT", month, day, Year, t))
 }
 
-// EarliestDate returns the earliest event date across all calendars as a
-// "YYYY-MM-DD" string. It applies the same row filter as EmitICal. Calendars()
-// must be called first so that the Year package variable is set.
+// EarliestDate returns the earliest event date in the forums calendar as a
+// "YYYY-MM-DD" string. The forums calendar is used rather than all calendars
+// because pre-expo events appear in other categories before the main event
+// begins. Calendars() must be called first so that the Year package variable
+// is set.
 func EarliestDate(calendars []Calendar) (string, error) {
 	var earliest time.Time
 	for _, cal := range calendars {
+		if cal.Filename != "forums.ics" {
+			continue
+		}
 		for _, row := range cal.Rows {
 			if row.Value.Start == "" || row.Value.Name == "Forum - Not Currently Scheduled" {
 				continue
