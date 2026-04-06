@@ -37,6 +37,42 @@
         cursor: pointer;
         font-size: 0.9rem;
       }
+
+      #event-dialog {
+        max-width: 28rem;
+        width: 90%;
+        border-radius: 6px;
+        padding: 1.5rem;
+      }
+
+      #event-dialog::backdrop {
+        background: rgba(0,0,0,0.4);
+      }
+
+      #event-dialog h3 {
+        margin-top: 0;
+      }
+
+      #event-dialog dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.25rem 0.75rem;
+        margin: 0.75rem 0 1rem;
+      }
+
+      #event-dialog dt {
+        font-weight: bold;
+        white-space: nowrap;
+      }
+
+      #event-dialog dd {
+        margin: 0;
+      }
+
+      #event-dialog .close-btn {
+        float: right;
+        margin-top: -0.25rem;
+      }
     </style>
 </head>
 <body>
@@ -62,6 +98,19 @@
     <div id="calendar"></div>
   </main>
 
+  <dialog id="event-dialog">
+    <button class="close-btn" onclick="this.closest('dialog').close()">&#x2715;</button>
+    <h3 id="event-title"></h3>
+    <dl>
+      <dt>Time</dt>     <dd id="event-time"></dd>
+      <dt>Location</dt> <dd id="event-location"></dd>
+      <dt>Type</dt>     <dd id="event-type"></dd>
+      <dt>Speaker</dt>  <dd id="event-speaker"></dd>
+      <dt>Track</dt>    <dd id="event-track"></dd>
+    </dl>
+    <p id="event-note" style="display:none; font-style:italic; font-size:0.9rem;"></p>
+  </dialog>
+
   <footer>
     <p>Copyright &copy; 2026 Michael Hrivnak</p>
   </footer>
@@ -86,6 +135,32 @@
         console.warn('Could not load meta.json, defaulting initialDate to today:', e);
       }
 
+      // Parse the DESCRIPTION field written by AsICS():
+      //   "Type: ...\nTrack: ...\nSpeaker: ...\n\nNOTE: ..."
+      function parseDesc(raw = '') {
+        const fields = {};
+        let note = '';
+        for (const line of raw.split('\n')) {
+          const m = line.match(/^([^:]+):\s*(.*)/);
+          if (m) {
+            const key = m[1].trim();
+            if (key === 'NOTE') note = line;
+            else fields[key] = m[2].trim();
+          }
+        }
+        return { fields, note };
+      }
+
+      function fmtRange(start, end) {
+        const opts = { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' };
+        const s = start.toLocaleTimeString([], opts);
+        if (!end) return s;
+        const e = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        return `${s} – ${e}`;
+      }
+
+      const dialog = document.getElementById('event-dialog');
+
       const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
         initialView: 'timeGridWeek',
         initialDate: initialDate,
@@ -100,8 +175,27 @@
           format: 'ics',
           color:  s.color,
         })),
+        eventClick: function(info) {
+          const ev = info.event;
+          const { fields, note } = parseDesc(ev.extendedProps.description);
+          document.getElementById('event-title').textContent    = ev.title;
+          document.getElementById('event-time').textContent     = fmtRange(ev.start, ev.end);
+          document.getElementById('event-location').textContent = ev.extendedProps.location || '—';
+          document.getElementById('event-type').textContent     = fields['Type']    || '—';
+          document.getElementById('event-speaker').textContent  = fields['Speaker'] || '—';
+          document.getElementById('event-track').textContent    = fields['Track']   || '—';
+          const noteEl = document.getElementById('event-note');
+          noteEl.textContent  = note;
+          noteEl.style.display = note ? '' : 'none';
+          dialog.showModal();
+        },
       });
       calendar.render();
+
+      // Close dialog on backdrop click.
+      dialog.addEventListener('click', e => {
+        if (e.target === dialog) dialog.close();
+      });
 
       // Checkbox filtering: remove or re-add event sources by ID.
       document.querySelectorAll('#filters input[type=checkbox]').forEach(cb => {
