@@ -9,6 +9,13 @@
     <script src="https://cdn.jsdelivr.net/npm/ical.js/build/ical.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@6/index.global.min.js"></script>
     <style>
+      /* Break main out of simple.css's narrow center grid column so the
+         calendar uses nearly the full viewport width on wide screens. */
+      main {
+        grid-column: 1 / -1;
+        padding: 0 2rem;
+      }
+
       /* Reset simple.css table styles inside the FullCalendar container so they
          don't interfere with FullCalendar's own rendering. */
       #calendar table,
@@ -164,6 +171,7 @@
       const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
         initialView: 'timeGridWeek',
         initialDate: initialDate,
+        height: 'auto',
         headerToolbar: {
           left:   'prev,next today',
           center: 'title',
