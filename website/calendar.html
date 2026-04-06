@@ -175,7 +175,14 @@
         headerToolbar: {
           left:   'prev,next today',
           center: 'title',
-          right:  'timeGridWeek,timeGridDay',
+          right:  'timeGridWeek,timeGridDay,listWeek,listDay',
+        },
+        buttonText: {
+          week:     'week',
+          day:      'day',
+          today:    'today',
+          listWeek: 'list week',
+          listDay:  'list day',
         },
         eventSources: Object.entries(sources).map(([id, s]) => ({
           id:     id,
