@@ -134,12 +134,16 @@ with `simple.css` resets.
 ## meta.json
 
 The Go tool already parses all event dates. After sorting rows into calendars,
-it finds the minimum `DTSTART` across all events and writes `/ical/meta.json`
-alongside the `.ics` and `status.html` files:
+it finds the minimum `DTSTART` across forum events only and writes
+`/ical/meta.json` alongside the `.ics` and `status.html` files:
 
 ```json
 { "expoStart": "2026-04-13", "generatedAt": "2026-04-05T14:00:00Z" }
 ```
+
+The forums calendar is used exclusively rather than all calendars because
+pre-expo events appear in other categories (e.g. "other") before the main
+event begins, which would pull `expoStart` too early.
 
 ### Go changes
 
@@ -155,9 +159,12 @@ if err := meta.Write(filepath.Join(OutDir, "meta.json"), expoStart, time.Now());
 }
 ```
 
-`earliestDate` iterates the `[]Calendar` slice, scans each `Row`, parses the
-`Start` field (already done by `timestamp()` in `parse.go`), and returns the
-earliest date as a `YYYY-MM-DD` string.
+`earliestDate` iterates the `[]Calendar` slice and skips every calendar whose
+`Filename` is not `"forums.ics"`. For each `Row` in the forums calendar it
+parses `Row.Start` via `timestamp()` (in `parse.go`) to obtain a `time.Time`,
+then tracks the minimum. The result is returned as a `YYYY-MM-DD` string.
+Rows with an empty `Start` field are skipped, matching the same filter applied
+in `EmitICal()`.
 
 ### Benefits over a hardcoded date
 

@@ -134,8 +134,12 @@ func timestamp(month string, day int, t string) (time.Time, error) {
 // "YYYY-MM-DD" string. The forums calendar is used rather than all calendars
 // because pre-expo events appear in other categories before the main event
 // begins. Calendars() must be called first so that the Year package variable
-// is set.
+// is set; Year is used by timestamp() when converting Day+Start strings to
+// time.Time values.
 func EarliestDate(calendars []Calendar) (string, error) {
+	if Year == 0 {
+		return "", fmt.Errorf("EarliestDate: Year is uninitialized (got 0); call Calendars() first to set Year before invoking EarliestDate, which depends on Year via timestamp()")
+	}
 	var earliest time.Time
 	for _, cal := range calendars {
 		if cal.Filename != "forums.ics" {

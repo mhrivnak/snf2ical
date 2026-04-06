@@ -75,11 +75,19 @@
         other:         { url: '/ical/other.ics',         color: '#7b1fa2', label: 'Other' },
       };
 
-      const meta = await fetch('/ical/meta.json').then(r => r.json());
+      let initialDate = new Date().toISOString().slice(0, 10);
+      try {
+        const res = await fetch('/ical/meta.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const meta = await res.json();
+        if (meta.expoStart) initialDate = meta.expoStart;
+      } catch (e) {
+        console.warn('Could not load meta.json, defaulting initialDate to today:', e);
+      }
 
       const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
         initialView: 'timeGridWeek',
-        initialDate: meta.expoStart,
+        initialDate: initialDate,
         headerToolbar: {
           left:   'prev,next today',
           center: 'title',

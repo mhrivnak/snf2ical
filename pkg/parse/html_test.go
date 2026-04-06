@@ -357,6 +357,16 @@ func TestParseScheduleHTML_ReorderedColumns(t *testing.T) {
 	}
 }
 
+func TestEarliestDate_UninitializedYear(t *testing.T) {
+	Year = 0
+	_, err := EarliestDate([]Calendar{{Filename: "forums.ics", Rows: []Row{
+		{Value: Event{Day: "Mon. April 1", Name: "Forum Event", Start: "9:00 AM", End: "10:00 AM", Type: "Forum"}},
+	}}})
+	if err == nil {
+		t.Fatal("expected error when Year is uninitialized, got nil")
+	}
+}
+
 func TestEarliestDate_UsesForumsOnly(t *testing.T) {
 	// "Other" has an earlier date; EarliestDate should ignore it and use forums.
 	rows := []Row{
