@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/mhrivnak/snf2ical/pkg/meta"
 	"github.com/mhrivnak/snf2ical/pkg/parse"
 	"github.com/mhrivnak/snf2ical/pkg/status"
 
@@ -85,6 +86,16 @@ func main() {
 				cal.WriteTo(out)
 				out.Close()
 				eventCount += cal.EmitCount
+			}
+
+			expoStart, err := parse.EarliestDate(calendars)
+			if err != nil {
+				fmt.Printf("failed to determine expo start date: %v\n", err)
+				os.Exit(1)
+			}
+			if err := meta.Write(filepath.Join(OutDir, "meta.json"), expoStart, time.Now()); err != nil {
+				fmt.Printf("failed to write meta.json: %v\n", err)
+				os.Exit(1)
 			}
 
 			s, err := status.New(time.Now(), eventCount)
