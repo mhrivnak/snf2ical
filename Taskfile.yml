@@ -65,11 +65,6 @@ tasks:
       - go mod tidy
       - go mod vendor
 
-  run:
-    desc: Run the application with example flags
-    cmds:
-      - go run {{.CMD_DIR}}/snf2ical.go --help
-
   install:
     desc: Install the binary to $GOPATH/bin
     cmds:
